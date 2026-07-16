@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+.env
+
+# Generated at ingestion time -- rebuild via scripts/ingest_sample_docs.py
+vectorstore/data/
+logs/
+
+.claude/

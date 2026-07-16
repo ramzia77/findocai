@@ -1,0 +1,55 @@
+app:
+  name: findocai
+  env: local  # local | production
+
+paths:
+  sample_docs_dir: sample_docs
+  index_dir: vectorstore/data
+  logs_dir: logs
+
+chunking:
+  strategy: section_aware  # section_aware | fixed_size
+  max_chunk_chars: 1500
+  overlap_chars: 150
+
+llm:
+  provider: ollama  # openai | azure_openai | ollama | fake
+  model: llama3.1:8b
+  temperature: 0.0
+  azure:
+    deployment: null
+    endpoint: null
+    api_version: "2024-08-01-preview"
+  ollama:
+    base_url: http://localhost:11434
+
+embedding:
+  provider: ollama  # openai | azure_openai | ollama | fake
+  model: nomic-embed-text
+  dimensions: 768
+  azure:
+    deployment: null
+    endpoint: null
+    api_version: "2024-08-01-preview"
+  ollama:
+    base_url: http://localhost:11434
+
+vectorstore:
+  backend: faiss  # faiss (azure_ai_search / pinecone are future migration targets)
+  index_path: vectorstore/data/findocai.faiss
+
+retrieval:
+  top_k: 5
+
+redaction:
+  engine: regex  # regex | presidio (future)
+  store_raw_text: true
+
+audit:
+  backend: jsonl  # jsonl | sqlite (future)
+  path: logs/audit.jsonl
+
+api:
+  # API keys accepted by the service; overridden by FINDOCAI_API_KEYS env var (comma-separated)
+  keys:
+    - dev-local-key

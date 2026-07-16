@@ -1,0 +1,66 @@
+[
+  {
+    "id": "q1",
+    "question": "What is the interest rate on the Harborview Logistics loan?",
+    "doc_type": "loan_agreement",
+    "expected_answer_contains": "6.75%",
+    "ground_truth_doc_id": "15a685aad02c43e9",
+    "ground_truth_chunk_ids": ["15a685aad02c43e9::p1::c1"]
+  },
+  {
+    "id": "q2",
+    "question": "What is the principal amount of the loan?",
+    "doc_type": "loan_agreement",
+    "expected_answer_contains": "$850,000",
+    "ground_truth_doc_id": "15a685aad02c43e9",
+    "ground_truth_chunk_ids": ["15a685aad02c43e9::p1::c1"]
+  },
+  {
+    "id": "q3",
+    "question": "What governing law applies to the loan agreement?",
+    "doc_type": "loan_agreement",
+    "expected_answer_contains": "Illinois",
+    "ground_truth_doc_id": "15a685aad02c43e9",
+    "ground_truth_chunk_ids": ["15a685aad02c43e9::p1::c5"]
+  },
+  {
+    "id": "q4",
+    "question": "What minimum debt service coverage ratio must the borrower maintain?",
+    "doc_type": "loan_agreement",
+    "expected_answer_contains": "1.25",
+    "ground_truth_doc_id": "15a685aad02c43e9",
+    "ground_truth_chunk_ids": ["15a685aad02c43e9::p1::c3"]
+  },
+  {
+    "id": "q5",
+    "question": "What is the total amount due on the Crestline Office Supply invoice?",
+    "doc_type": "invoice",
+    "expected_answer_contains": "$6,626.98",
+    "ground_truth_doc_id": "e1a8293ea7477628",
+    "ground_truth_chunk_ids": ["e1a8293ea7477628::p1::c3"]
+  },
+  {
+    "id": "q6",
+    "question": "How many standing desks were ordered on the invoice?",
+    "doc_type": "invoice",
+    "expected_answer_contains": "6",
+    "ground_truth_doc_id": "e1a8293ea7477628",
+    "ground_truth_chunk_ids": ["e1a8293ea7477628::p1::c2"]
+  },
+  {
+    "id": "q7",
+    "question": "What was Northfield Industrial Holdings' total revenue for fiscal year 2024?",
+    "doc_type": "financial_statement",
+    "expected_answer_contains": "$482.3 million",
+    "ground_truth_doc_id": "f2d67bcfac66954f",
+    "ground_truth_chunk_ids": ["f2d67bcfac66954f::p1::c0"]
+  },
+  {
+    "id": "q8",
+    "question": "What was the company's total stockholders' equity?",
+    "doc_type": "financial_statement",
+    "expected_answer_contains": "$324.7 million",
+    "ground_truth_doc_id": "f2d67bcfac66954f",
+    "ground_truth_chunk_ids": ["f2d67bcfac66954f::p1::c1"]
+  }
+]

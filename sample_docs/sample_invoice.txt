@@ -1,0 +1,32 @@
+INVOICE
+
+Vendor: Crestline Office Supply Co.
+Customer: Harborview Logistics LLC
+Invoice Number: INV-2025-04471
+Invoice Date: April 14, 2025
+Due Date: May 14, 2025
+Remit-to contact: billing@crestlinesupply.example, (312) 555-0148
+
+BILLING CONTACT
+
+Accounts payable reference: SSN on file for sole proprietor vendor contact is
+523-11-8890 (kept for internal reconciliation only).
+
+LINE ITEMS
+
+1. Description: Standing desks (48in), Quantity: 6, Unit Price: $410.00, Amount: $2,460.00
+2. Description: Ergonomic office chairs, Quantity: 12, Unit Price: $185.00, Amount: $2,220.00
+3. Description: Wireless conference room display, Quantity: 1, Unit Price: $899.00, Amount: $899.00
+4. Description: Installation and setup labor, Quantity: 8, Unit Price: $75.00, Amount: $600.00
+
+TOTALS
+
+Subtotal: $6,179.00
+Tax (7.25%): $447.98
+Total Due: $6,626.98
+
+PAYMENT TERMS
+
+Payment is due within 30 days of the invoice date. Late payments accrue
+interest at 1.5% per month. Remit payment to Crestline Office Supply Co.,
+account number 00187734422, routing number 071000013.
