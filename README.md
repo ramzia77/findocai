@@ -135,7 +135,7 @@ fully local, zero cost, no API key, works offline once models are pulled.
    automatically as a background service after install).
 2. Pull the two models `config.yaml` expects:
    ```
-   ollama pull llama3.1:8b        # chat + function/tool calling
+   ollama pull llama3.2:3b        # chat + function/tool calling (~2GB; llama3.1:8b is higher-quality but ~4.9GB)
    ollama pull nomic-embed-text   # embeddings
    ```
 3. Install system dependencies for OCR (only needed for scanned PDFs; the
@@ -201,27 +201,59 @@ after all API routes, so `/health`, `/query`, `/ingest`, `/extract` still
 resolve first), so `uvicorn api.main:app` alone then serves both the API and
 the built UI with no CORS needed at all.
 
-## Compliance features
+## Compliance & production hardening
 
 - **PII/PCI redaction** (`ingestion/cleaner.py`): SSN, credit card (Luhn
   checked), bank account/routing numbers (ABA checksum), email, phone, and
   EIN patterns are redacted at chunk-creation time, before anything is
   embedded or sent to an LLM. The original text is retained separately
   (`Chunk.raw_text`) for authenticated citation display and can be disabled
-  via `config.yaml: redaction.store_raw_text: false`. Redaction runs a second,
-  defensive time on user questions and on answers/extractions before they're
-  written to the audit log. Swapping the regex engine for Microsoft Presidio
-  later only requires a new class implementing `find`/`redact`.
-- **Audit logging** (`api/auth.py`): every `/query` and `/extract` call
-  writes one JSONL line to `logs/audit.jsonl` (who, when, what was retrieved,
-  what was answered/extracted, latency) -- deliberately separate from
-  application logs so it can be exported for compliance review independently.
+  via `config.yaml: redaction.store_raw_text: false`. Swapping the regex
+  engine for Microsoft Presidio later only requires a new class implementing
+  `find`/`redact`.
+- **Auth**: hashed, scoped (`upload`/`query`/`read`/`admin`), per-tenant API
+  keys with constant-time comparison (`api/auth.py`) -- not one flat shared
+  secret. `python -m scripts.hash_api_key` generates a key hash so the
+  plaintext never has to live in config.
+- **Rate limiting**: per-key token-bucket ASGI middleware (`api/rate_limit.py`).
+- **Real database**: SQLite via SQLAlchemy (`db/`) is the system of record
+  for the document registry, audit trail, and embedding cache -- WAL mode
+  for real concurrent-write safety, replacing the JSONL files that had none.
+  One connection-string change (`config.yaml: database.url`) migrates to
+  Postgres.
+- **Encryption at rest** (`encryption.py`): optional Fernet encryption for
+  audit-log question/answer text and each chunk's `raw_text`, enabled by
+  setting `FINDOCAI_ENCRYPTION_KEY`. No-op (plaintext) if unset.
+- **Multi-tenancy**: each API key carries a `tenant_id`; documents, audit
+  records, and retrieval/search results are all scoped to it, so a
+  compromised key only ever exposes its own tenant's data.
+- **Audit logging**: every `/query`/`/extract` call is recorded (who, when,
+  what was retrieved, what was answered, latency) in the database (queryable
+  via `GET /audit`), plus a legacy JSONL export at `logs/audit.jsonl` --
+  deliberately separate from application logs.
+- **Observability**: structured JSON logs (`logging_config.py`) correlated
+  by `request_id` across app logs and audit records; `GET /ready` checks real
+  dependency health (DB, vectorstore, LLM provider) separately from `GET
+  /health` (liveness only); optional Sentry via `SENTRY_DSN`.
+- **Right to erasure**: `DELETE /documents/{doc_id}` actually removes a
+  document's vectors (via FAISS `reconstruct_n`, no re-embedding needed) and
+  its registry row -- no more `NotImplementedError`.
 
-## Migration path (not built yet, seams left for it)
+See **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)** for the
+full audit this hardening pass responded to, and what's left (real SSO/OIDC,
+CDN, load balancer, managed KMS, off-site backups, malware scanning) --
+those need actual infrastructure this repo doesn't provide on its own.
 
-- FAISS -> Azure AI Search or Pinecone: implement the `VectorStore` protocol
-  in `vectorstore/index.py`; `rag/chain.py` and `rag/extractor.py` never
-  touch FAISS directly.
+## Migration path
+
+- FAISS -> Azure AI Search / Pinecone / pgvector: implement the
+  `VectorStore` protocol in `vectorstore/index.py`; `rag/chain.py` and
+  `rag/extractor.py` never touch FAISS directly. Note this is also the
+  remaining piece for true horizontal scaling -- the DB layer is safe for
+  multiple replicas now, but the FAISS index itself is still per-process
+  memory.
+- SQLite -> Postgres: change `database.url` in `config.yaml`; SQLAlchemy
+  abstracts the rest.
 - FastAPI -> Azure Container Apps / Azure Functions: `api/main.py` builds all
   state in `lifespan` and stores it on `app.state`, with no global mutable
   singletons besides the loaded index -- suited to stateless-handler
@@ -231,21 +263,27 @@ the built UI with no CORS needed at all.
 
 - `ingestion/` -- `loader.py` (PDF/OCR/txt), `cleaner.py` (normalize + PII
   redaction), `chunker.py` (section-aware / fixed-size), `metadata.py`
-  (shared citation/chunk models), `pipeline.py` (shared ingest orchestration).
-- `vectorstore/` -- `embedder.py`, `index.py` (FAISS), `retriever.py`.
+  (shared citation/chunk models), `pipeline.py` (shared ingest orchestration
+  + embedding cache).
+- `vectorstore/` -- `embedder.py`, `index.py` (FAISS, tenant-aware search +
+  real delete), `retriever.py`.
 - `rag/` -- `chain.py` (LLM client + cited Q&A), `extractor.py` (structured
   extraction), `prompts/` (system prompt templates).
-- `api/` -- `main.py` (FastAPI app), `schemas.py`, `auth.py` (API key +
-  audit logging).
+- `api/` -- `main.py` (FastAPI app), `schemas.py`, `auth.py` (scoped API-key
+  auth + audit logging), `rate_limit.py` (token-bucket middleware).
+- `db/` -- `models.py`, `session.py`, `repository.py` (SQLAlchemy: document
+  registry, audit trail, embedding cache).
+- `encryption.py`, `logging_config.py` -- encryption-at-rest and structured
+  logging, both root-level alongside `settings.py`.
 - `evaluation/` -- `test_set.json`, `ragas_eval.py`, `chunking_ab.py`.
-- `scripts/ingest_sample_docs.py` -- CLI to build the index from
-  `sample_docs/`.
+- `scripts/ingest_sample_docs.py`, `scripts/hash_api_key.py` -- ingestion CLI
+  and API-key hashing helper.
 - `sample_docs/` -- synthetic public-style loan agreement, invoice, and
   10-K excerpt (see `sample_docs/README.md`).
-- `tests/` -- offline unit/integration tests using `Fake*` clients.
-- `web/` -- React + Vite + TypeScript + Tailwind UI (Upload + Ask screens);
-  `src/api/types.ts` mirrors the Pydantic schemas, `src/api/client.ts` is the
-  fetch wrapper, `src/pages/` holds the three screens.
+- `tests/` -- offline unit/integration tests using `Fake*` clients and an
+  in-memory SQLite DB per test.
+- `web/` -- React + Vite + TypeScript + Tailwind UI; `src/api/types.ts`
+  mirrors the Pydantic schemas, `src/api/client.ts` is the fetch wrapper.
 
 ## License
 

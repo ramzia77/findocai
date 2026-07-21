@@ -1,4 +1,11 @@
-import type { DocType, HealthResponse, IngestResponse, QueryResponse } from "./types";
+import type {
+  AuditResponse,
+  DocType,
+  DocumentsResponse,
+  HealthResponse,
+  IngestResponse,
+  QueryResponse,
+} from "./types";
 
 export class ApiError extends Error {
   status: number;
@@ -47,6 +54,9 @@ async function request<T>(
   if (!response.ok) {
     throw new ApiError(response.status, await parseErrorDetail(response));
   }
+  if (response.status === 204) {
+    return undefined as T;
+  }
   return (await response.json()) as T;
 }
 
@@ -75,4 +85,16 @@ export function askQuestion(
     method: "POST",
     body: JSON.stringify({ question, doc_type: docType, top_k: topK }),
   });
+}
+
+export function listDocuments(config: ApiConfig): Promise<DocumentsResponse> {
+  return request<DocumentsResponse>(config, "/documents");
+}
+
+export function deleteDocument(config: ApiConfig, docId: string): Promise<void> {
+  return request<void>(config, `/documents/${encodeURIComponent(docId)}`, { method: "DELETE" });
+}
+
+export function listAudit(config: ApiConfig, limit = 50): Promise<AuditResponse> {
+  return request<AuditResponse>(config, `/audit?limit=${limit}`);
 }

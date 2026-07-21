@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from db import repository as db_repository
+from db.session import init_db
 from ingestion.chunker import get_chunker
 from ingestion.loader import DocumentLoader
 from ingestion.pipeline import guess_doc_type, ingest_document
@@ -28,6 +30,7 @@ def main() -> None:
 
     settings = get_settings()
     sample_docs_dir = BASE_DIR / settings.paths.sample_docs_dir
+    init_db(settings.database.url)
 
     embedder = FakeEmbeddingClient(dimensions=settings.embedding.dimensions) if args.dry_run else get_embedding_client(settings)
     loader = DocumentLoader()
@@ -50,6 +53,13 @@ def main() -> None:
         doc_type = guess_doc_type(doc_path.name)
         result = ingest_document(str(doc_path), doc_type, loader, chunker, embedder, vectorstore)
         total_chunks += result.num_chunks
+        db_repository.record_document(
+            doc_id=result.metadata.doc_id,
+            filename=doc_path.name,
+            doc_type=doc_type.value,
+            num_chunks=result.num_chunks,
+            pii_chunks=result.pii_chunks_redacted,
+        )
         print(
             f"ingested {doc_path.name} (doc_id={result.metadata.doc_id}, "
             f"doc_type={doc_type.value}, chunks={result.num_chunks}, "

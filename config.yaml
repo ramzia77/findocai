@@ -14,7 +14,7 @@ chunking:
 
 llm:
   provider: ollama  # openai | azure_openai | ollama | fake
-  model: llama3.1:8b
+  model: llama3.2:3b
   temperature: 0.0
   azure:
     deployment: null
@@ -46,10 +46,37 @@ redaction:
   store_raw_text: true
 
 audit:
-  backend: jsonl  # jsonl | sqlite (future)
+  backend: sqlite  # sqlite | jsonl (jsonl retained only as a legacy export target)
   path: logs/audit.jsonl
 
 api:
-  # API keys accepted by the service; overridden by FINDOCAI_API_KEYS env var (comma-separated)
+  # API keys accepted by the service; overridden by FINDOCAI_API_KEYS env var
+  # (comma-separated plaintext keys). Prefer key_hash entries in real
+  # deployments -- generate one with `python -m scripts.hash_api_key` so the
+  # plaintext key never has to live in this file. The plain-string form
+  # below is local-dev convenience only, and app.env != local refuses to
+  # start if it's the *only* configured key.
   keys:
     - dev-local-key
+    # - key_hash: "<output of scripts/hash_api_key.py>"
+    #   scopes: [upload, query, read]   # omit 'admin' for a non-admin key
+    #   tenant_id: acme-bank
+
+cors:
+  # Explicit allowlist -- no "*" by default. Add your deployed web origin here.
+  allowed_origins:
+    - http://localhost:5173
+
+upload:
+  max_bytes: 26214400  # 25 MB
+
+rate_limit:
+  enabled: true
+  requests_per_minute: 60
+
+database:
+  url: sqlite:///./findocai.db
+
+observability:
+  sentry_dsn: null
+  log_path: logs/app.log

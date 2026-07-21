@@ -13,7 +13,11 @@ import { TextArea } from "../components/ui/TextArea";
 import { useSettings } from "../context/SettingsContext";
 import { useToast } from "../context/ToastContext";
 
-export function AskPage() {
+interface AskPageProps {
+  onNavigateToAudit?: () => void;
+}
+
+export function AskPage({ onNavigateToAudit }: AskPageProps) {
   const { apiBaseUrl, apiKey } = useSettings();
   const toast = useToast();
 
@@ -53,8 +57,8 @@ export function AskPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <h2 className="text-sm font-semibold text-slate-900">Ask a question</h2>
-          <p className="text-sm text-slate-500">Answers are grounded in ingested documents, with citations.</p>
+          <h2 className="text-sm font-semibold text-zinc-900">Ask a question</h2>
+          <p className="text-sm text-zinc-500">Answers are grounded in ingested documents, with citations.</p>
         </CardHeader>
         <CardBody className="space-y-4">
           <TextArea
@@ -66,7 +70,7 @@ export function AskPage() {
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Document type filter</label>
+              <label className="mb-1 block text-xs font-medium text-zinc-600">Document type filter</label>
               <Select value={docTypeFilter} onChange={(e) => setDocTypeFilter(e.target.value as DocType | "")}>
                 <option value="">All types</option>
                 {DOC_TYPES.map((d) => (
@@ -77,7 +81,7 @@ export function AskPage() {
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Top-K results</label>
+              <label className="mb-1 block text-xs font-medium text-zinc-600">Top-K results</label>
               <Input
                 type="number"
                 min={1}
@@ -99,7 +103,7 @@ export function AskPage() {
         <>
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold text-slate-900">Answer</h2>
+              <h2 className="text-sm font-semibold text-zinc-900">Answer</h2>
             </CardHeader>
             <CardBody>
               <AnswerText
@@ -111,11 +115,11 @@ export function AskPage() {
           </Card>
 
           <div>
-            <h2 className="mb-3 text-sm font-semibold text-slate-900">
+            <h2 className="mb-3 text-sm font-semibold text-zinc-900">
               Sources {result.citations.length > 0 && `(${result.citations.length})`}
             </h2>
             {result.citations.length === 0 ? (
-              <p className="text-sm text-slate-400">No supporting chunks were retrieved for this question.</p>
+              <p className="text-sm text-zinc-400">No supporting chunks were retrieved for this question.</p>
             ) : (
               <div className="space-y-3">
                 {result.citations.map((citation, index) => (
@@ -124,6 +128,7 @@ export function AskPage() {
                     citation={citation}
                     index={index}
                     highlighted={highlighted === index}
+                    onViewInAudit={onNavigateToAudit}
                   />
                 ))}
               </div>

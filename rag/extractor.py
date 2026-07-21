@@ -75,12 +75,12 @@ class StructuredExtractor:
         self.llm_client = llm_client
         self._system_prompt = (PROMPTS_DIR / "extraction_system.txt").read_text(encoding="utf-8")
 
-    def extract(self, doc_id: str, doc_type: DocType) -> ExtractionResult:
+    def extract(self, doc_id: str, doc_type: DocType, tenant_id: str | None = None) -> ExtractionResult:
         if doc_type not in DOC_TYPE_SCHEMAS:
             raise ValueError(f"No extraction schema registered for doc_type={doc_type!r}")
         schema_model = DOC_TYPE_SCHEMAS[doc_type]
 
-        chunks = self._gather_context(doc_id)
+        chunks = self._gather_context(doc_id, tenant_id=tenant_id)
         tool = self._pydantic_to_tool_schema(schema_model, doc_type)
 
         from rag.chain import ChatMessage
@@ -108,14 +108,21 @@ class StructuredExtractor:
             raw_tool_arguments=result.arguments,
         )
 
-    def _gather_context(self, doc_id: str) -> list[ScoredChunk]:
+    def _gather_context(self, doc_id: str, tenant_id: str | None = None) -> list[ScoredChunk]:
         # Extraction needs the whole document, not a similarity-ranked subset,
         # so pull every chunk belonging to doc_id directly from the store.
         vectorstore = self.retriever.vectorstore
         all_chunks = getattr(vectorstore, "_chunks", None)
         if all_chunks is None:
             raise RuntimeError("Vectorstore backend does not expose stored chunks for extraction")
-        matching = [c for c in all_chunks if c.source.doc_id == doc_id]
+        matching = [
+            c
+            for c in all_chunks
+            if c.source.doc_id == doc_id
+            # A chunk with no tenant_id predates multi-tenancy / single-tenant
+            # deployment -- visible to any tenant, same rule as FAISS search.
+            and (tenant_id is None or c.tenant_id is None or c.tenant_id == tenant_id)
+        ]
         if not matching:
             raise ValueError(f"No ingested chunks found for doc_id={doc_id!r}")
         return [ScoredChunk(chunk=c, score=1.0) for c in matching]

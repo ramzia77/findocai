@@ -34,14 +34,14 @@ export function SettingsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
         <CardHeader>
-          <h2 className="text-sm font-semibold text-slate-900">API connection</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-sm font-semibold text-zinc-900">API connection</h2>
+          <p className="text-sm text-zinc-500">
             Stored in this browser only (localStorage) -- never sent anywhere except the API base URL below.
           </p>
         </CardHeader>
         <CardBody className="space-y-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">API base URL</label>
+            <label className="mb-1 block text-xs font-medium text-zinc-600">API base URL</label>
             <Input
               value={apiBaseUrl}
               onChange={(e) => setApiBaseUrl(e.target.value)}
@@ -49,14 +49,14 @@ export function SettingsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">API key</label>
+            <label className="mb-1 block text-xs font-medium text-zinc-600">API key</label>
             <Input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="dev-local-key"
             />
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-zinc-400">
               Matches an entry in <code>FINDOCAI_API_KEYS</code> / <code>config.yaml</code> on the backend.
             </p>
           </div>

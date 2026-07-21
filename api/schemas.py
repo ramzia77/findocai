@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from ingestion.metadata import DocType
 from rag.chain import Citation
+from vectorstore.index import DocumentSummary
 
 
 class QueryRequest(BaseModel):
@@ -44,3 +45,24 @@ class HealthResponse(BaseModel):
     vectorstore_backend: str
     llm_provider: str
     embedding_provider: str
+
+
+class DocumentsResponse(BaseModel):
+    documents: list[DocumentSummary]
+
+
+class AuditRecord(BaseModel):
+    request_id: str
+    timestamp: str
+    endpoint: str
+    api_key_id: str
+    doc_type: Optional[str]
+    question: str
+    retrieved_chunk_ids: list[str]
+    answer: str
+    latency_ms: float
+    status_code: int
+
+
+class AuditResponse(BaseModel):
+    records: list[AuditRecord]

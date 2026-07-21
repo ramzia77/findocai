@@ -97,6 +97,26 @@ class AzureOpenAIClient:
         return ToolCallResult(name=tool_call.function.name, arguments=json.loads(tool_call.function.arguments))
 
 
+def _normalize_tool_arguments(arguments: dict) -> dict:
+    """Smaller/local models are less strict than OpenAI about tool-call
+    argument typing -- e.g. llama3.2:3b has been observed returning an array
+    field as a JSON-encoded string (e.g. '["a", "b"]') instead of an actual
+    list. Repair any top-level string value that looks like JSON so pydantic
+    validation against the target schema doesn't reject an otherwise-correct
+    answer over formatting."""
+    import json
+
+    normalized = {}
+    for key, value in arguments.items():
+        if isinstance(value, str) and value[:1] in "[{":
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                pass
+        normalized[key] = value
+    return normalized
+
+
 class OllamaClient:
     """Local, free chat/tool-calling via a running Ollama server (`ollama
     serve`, with a tool-calling-capable model already pulled, e.g.
@@ -155,7 +175,7 @@ class OllamaClient:
             import json
 
             arguments = json.loads(arguments)
-        return ToolCallResult(name=call["name"], arguments=arguments)
+        return ToolCallResult(name=call["name"], arguments=_normalize_tool_arguments(arguments))
 
 
 class FakeLLMClient:
@@ -222,9 +242,17 @@ class RAGChain:
         self.redactor = redactor or get_redactor()
         self._system_prompt = _load_prompt("rag_system.txt")
 
-    def answer(self, question: str, doc_type: DocType | None = None, top_k: int = 5) -> RAGAnswer:
+    def answer(
+        self,
+        question: str,
+        doc_type: DocType | None = None,
+        top_k: int = 5,
+        tenant_id: str | None = None,
+    ) -> RAGAnswer:
         safe_question = self._redact_query(question)
-        scored_chunks = self.retriever.retrieve(safe_question, doc_type=doc_type, top_k=top_k)
+        scored_chunks = self.retriever.retrieve(
+            safe_question, doc_type=doc_type, top_k=top_k, tenant_id=tenant_id
+        )
 
         citations = [
             Citation(source=sc.chunk.source, snippet=sc.chunk.text) for sc in scored_chunks

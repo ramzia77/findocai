@@ -9,5 +9,14 @@ body,
 }
 
 body {
-  @apply bg-slate-50 font-sans text-slate-900 antialiased;
+  @apply bg-zinc-50 font-sans text-zinc-900 antialiased;
+}
+
+.label-caps {
+  @apply text-[11px] font-semibold uppercase text-zinc-400;
+  letter-spacing: 0.12em;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

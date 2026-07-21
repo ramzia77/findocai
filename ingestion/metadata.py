@@ -43,3 +43,8 @@ class Chunk(BaseModel):
     source: SourceRef
     doc_type: DocType
     contains_pii: bool = False
+    # Access-control concern, deliberately not on SourceRef (the citation
+    # identity contract) -- None means "no tenant scoping" (single-tenant
+    # deployments, and back-compat with chunks persisted before this field
+    # existed).
+    tenant_id: Optional[str] = None

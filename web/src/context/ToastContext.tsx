@@ -20,7 +20,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 const STYLES: Record<ToastKind, { border: string; icon: ReactNode }> = {
   success: { border: "border-emerald-200 bg-emerald-50 text-emerald-800", icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" /> },
   error: { border: "border-rose-200 bg-rose-50 text-rose-800", icon: <AlertCircle className="h-5 w-5 text-rose-500" /> },
-  info: { border: "border-slate-200 bg-white text-slate-800", icon: <Info className="h-5 w-5 text-slate-500" /> },
+  info: { border: "border-zinc-200 bg-white text-zinc-800", icon: <Info className="h-5 w-5 text-zinc-500" /> },
 };
 
 let nextId = 1;
@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <p className="flex-1 leading-snug">{t.message}</p>
             <button
               onClick={() => dismiss(t.id)}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-zinc-400 hover:text-zinc-600"
               aria-label="Dismiss"
             >
               <X className="h-4 w-4" />

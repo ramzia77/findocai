@@ -15,7 +15,7 @@ export function AnswerText({ text, citationCount, onCitationClick }: AnswerTextP
   const parts = text.split(MARKER_PATTERN);
 
   return (
-    <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-800">
+    <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-800">
       {parts.map((part, i) => {
         const match = part.match(MARKER_CAPTURE);
         if (!match) return <span key={i}>{part}</span>;
@@ -27,7 +27,7 @@ export function AnswerText({ text, citationCount, onCitationClick }: AnswerTextP
             key={i}
             disabled={!valid}
             onClick={() => onCitationClick(index)}
-            className="mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-100 px-1 align-middle text-xs font-semibold text-brand-700 hover:bg-brand-200 disabled:cursor-default disabled:opacity-60"
+            className="mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-zinc-900 px-1 align-middle text-xs font-semibold text-white hover:bg-zinc-700 disabled:cursor-default disabled:opacity-60"
           >
             {match[1]}
           </button>

@@ -13,6 +13,13 @@ class EmbeddingClient(Protocol):
     @property
     def dimensions(self) -> int: ...
 
+    @property
+    def model(self) -> str:
+        """Identifies which model produced a vector -- used as part of the
+        embedding cache key so two different models can't collide even if
+        they happen to share a dimension count."""
+        ...
+
 
 class OpenAIEmbeddingClient:
     def __init__(self, model: str = "text-embedding-3-small", api_key: str | None = None, dimensions: int = 1536):
@@ -35,6 +42,10 @@ class OpenAIEmbeddingClient:
     def dimensions(self) -> int:
         return self._dimensions
 
+    @property
+    def model(self) -> str:
+        return self._model
+
 
 class AzureOpenAIEmbeddingClient:
     def __init__(self, deployment: str, endpoint: str, api_key: str, api_version: str, dimensions: int = 1536):
@@ -56,6 +67,10 @@ class AzureOpenAIEmbeddingClient:
     @property
     def dimensions(self) -> int:
         return self._dimensions
+
+    @property
+    def model(self) -> str:
+        return self._deployment
 
 
 class OllamaEmbeddingClient:
@@ -94,6 +109,10 @@ class OllamaEmbeddingClient:
     def dimensions(self) -> int:
         return self._dimensions
 
+    @property
+    def model(self) -> str:
+        return self._model
+
 
 class FakeEmbeddingClient:
     """Deterministic hash-based pseudo-embeddings for offline testing and
@@ -118,6 +137,10 @@ class FakeEmbeddingClient:
     @property
     def dimensions(self) -> int:
         return self._dimensions
+
+    @property
+    def model(self) -> str:
+        return "fake"
 
 
 def get_embedding_client(settings) -> EmbeddingClient:

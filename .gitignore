@@ -9,4 +9,12 @@ __pycache__/
 vectorstore/data/
 logs/
 
+# SQLite document registry / audit trail / embedding cache (db/session.py)
+*.db
+*.db-wal
+*.db-shm
+
 .claude/
+
+web/node_modules/
+web/dist/

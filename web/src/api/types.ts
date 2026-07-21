@@ -55,3 +55,36 @@ export interface HealthResponse {
   llm_provider: string;
   embedding_provider: string;
 }
+
+// vectorstore/index.py: DocumentSummary
+export interface DocumentSummary {
+  doc_id: string;
+  filename: string;
+  doc_type: DocType;
+  num_chunks: number;
+  pii_chunks: number;
+}
+
+// api/schemas.py: DocumentsResponse
+export interface DocumentsResponse {
+  documents: DocumentSummary[];
+}
+
+// api/schemas.py: AuditRecord
+export interface AuditRecord {
+  request_id: string;
+  timestamp: string;
+  endpoint: string;
+  api_key_id: string;
+  doc_type: string | null;
+  question: string;
+  retrieved_chunk_ids: string[];
+  answer: string;
+  latency_ms: number;
+  status_code: number;
+}
+
+// api/schemas.py: AuditResponse
+export interface AuditResponse {
+  records: AuditRecord[];
+}
